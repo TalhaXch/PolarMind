@@ -1,30 +1,57 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// POLARMIND Widget Tests
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:polarmind/main.dart';
+import 'package:polarmind/core/physics/vector2d.dart';
+import 'package:polarmind/core/physics/magnet_force_calculator.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Vector2D', () {
+    test('addition works correctly', () {
+      const a = Vector2D(1, 2);
+      const b = Vector2D(3, 4);
+      final result = a + b;
+      expect(result.x, 4);
+      expect(result.y, 6);
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    test('magnitude calculation', () {
+      const v = Vector2D(3, 4);
+      expect(v.magnitude, 5);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('normalization', () {
+      const v = Vector2D(3, 4);
+      final normalized = v.normalized;
+      expect(normalized.x, closeTo(0.6, 0.001));
+      expect(normalized.y, closeTo(0.8, 0.001));
+    });
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  group('MagnetForceCalculator', () {
+    test('opposite poles attract', () {
+      final force = MagnetForceCalculator.calculateForce(
+        sourcePosition: const Vector2D(0, 0),
+        targetPosition: const Vector2D(100, 0),
+        sourcePolarity: Polarity.north,
+        targetPolarity: Polarity.south,
+        sourceStrength: 1.0,
+        targetStrength: 1.0,
+      );
+      // Positive x means attraction toward source
+      expect(force.x < 0, true);
+    });
+
+    test('like poles repel', () {
+      final force = MagnetForceCalculator.calculateForce(
+        sourcePosition: const Vector2D(0, 0),
+        targetPosition: const Vector2D(100, 0),
+        sourcePolarity: Polarity.north,
+        targetPolarity: Polarity.north,
+        sourceStrength: 1.0,
+        targetStrength: 1.0,
+      );
+      // Negative x means repulsion away from source
+      expect(force.x > 0, true);
+    });
   });
 }
